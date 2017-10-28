@@ -20,6 +20,33 @@
 #define DIRB 4 // Direction control for motor B
 #define PWMB 11 // PWM control (speed) for motor B
 
+//is black
+byte k(int reading){
+  if (reading>BLACK) return 1;
+  else return 0;
+}
+
+//gets location of the robot
+int get_x(int prev){
+//negative location means on the left of the lane, positive on the right
+//the more negative, the more on the left, more positive more on the right
+    int mi = analogRead(MI);//middle sensor reading
+    int li = analogRead(LI);//left sensor reading
+    int ri = analogRead(RI);//right sensor reading
+    if ((!k(li)&&!k(mi)&&!k(ri))||(k(li)&&k(mi)&&k(ri))){
+    // if all sensor are white or all sensor are black
+      if (prev<0) return -10;//if previous detection is on the left, then it's on the very left 
+      else if (prev>0) return 10;//on the right
+      else return 0;//in the middle
+    }else if (k(ri)&&!k(mi)&&!k(li)) return -2;//if only the right sensor is black, then it's on the far left
+    else if (k(ri)&&k(mi)&&!k(li)) return -1;//if the right and middle sensor is black, then it's on the left
+    else if (k(mi)&&!k(li)&&!k(ri)) return 0;//if the middle sensor is black, then it's in the middle
+    else if (k(li)&&k(mi)&&!k(ri)) return 1;//if the left sensor and middle sensor is black, then it's on the right
+    else if (k(li)&&!k(mi)&&!k(ri)) return 2;//if only the left sensor is black, then it's on the far right
+    else return 0;//other situations, pretend it's in the middle
+}
+
+
 // driveArdumoto drives 'motor' in 'dir' direction at 'spd' speed
 void driveArdumoto(byte motor, byte dir, byte spd)
 {
@@ -48,32 +75,6 @@ void drive(int v=128, int dx_prev=0, int dx=0){
   else driveArdumoto(LM,BACKWARD,-lv*0.5);
   if (rv>0) driveArdumoto(RM,FORWARD,rv);
   else driveArdumoto(RM,BACKWARD,-rv*0.5);
-}
-
-//is black
-byte k(int reading){
-  if (reading>BLACK) return 1;
-  else return 0;
-}
-
-//gets location of the robot
-int get_x(int prev){
-//negative location means on the left of the lane, positive on the right
-//the more negative, the more on the left, more positive more on the right
-    int mi = analogRead(MI);//middle sensor reading
-    int li = analogRead(LI);//left sensor reading
-    int ri = analogRead(RI);//right sensor reading
-    if ((!k(li)&&!k(mi)&&!k(ri))||(k(li)&&k(mi)&&k(ri))){
-    // if all sensor are white or all sensor are black
-      if (prev<0) return -10;//if previous detection is on the left, then it's on the very left 
-      else if (prev>0) return 10;//on the right
-      else return 0;//in the middle
-    }else if (k(ri)&&!k(mi)&&!k(li)) return -2;//if only the right sensor is black, then it's on the far left
-    else if (k(ri)&&k(mi)&&!k(li)) return -1;//if the right and middle sensor is black, then it's on the left
-    else if (k(mi)&&!k(li)&&!k(ri)) return 0;//if the middle sensor is black, then it's in the middle
-    else if (k(li)&&k(mi)&&!k(ri)) return 1;//if the left sensor and middle sensor is black, then it's on the right
-    else if (k(li)&&!k(mi)&&!k(ri)) return 2;//if only the left sensor is black, then it's on teh far right
-    else return 0;//othe situations, pretend it's in the middle
 }
 
 //setup arduino
